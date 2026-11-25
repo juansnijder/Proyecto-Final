@@ -1,0 +1,13 @@
+FATTOFIT EN CELULAR
+
+La Raspberry ejecuta python app.py. El celular solo abre la URL del servidor:
+http://IP_DE_LA_RASPBERRY:5001 en la misma red del colegio.
+No usa la dirección 127.0.0.1 de su propio navegador.
+
+HTML en templates, CSS en static. No hay JavaScript.
+Los ejercicios y las categorías de Ajustes son desplegables.
+El descanso se configura en Entrenar, sigue al navegar y se oculta con ×.
+La flecha superior izquierda permite volver dentro de la aplicación.
+El manifest y los íconos describen la app al navegador; no hay modo sin red.
+Agregar a pantalla de inicio depende del navegador y del uso de HTTPS.
+La guía de instalación está en INSTALAR-EN-RASPBERRY.md.

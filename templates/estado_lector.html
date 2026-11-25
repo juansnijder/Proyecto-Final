@@ -1,0 +1,10 @@
+{# Estado compartido por Ingresar y Ajustes. #}
+<div class="notice" role="status">
+{% if estado_lectura == 'ocupado' %}
+    El lector está atendiendo otro navegador. Esperá a que termine o venza la espera (45 segundos).
+{% elif estado_lectura == 'sin_lector' %}
+    El lector no está disponible. Revisá la terminal en la Raspberry. Podés ingresar con usuario y contraseña.
+{% else %}
+    La espera terminó o fue cancelada. Iniciá otra lectura y volvé a acercar tu tarjeta.
+{% endif %}
+</div>

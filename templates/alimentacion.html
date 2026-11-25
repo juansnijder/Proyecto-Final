@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% from 'componentes.html' import icono, csrf with context %}
+{% block titulo %}
+    Alimentación
+{% endblock %}
+{% block seccion %}
+    Alimentación
+{% endblock %}
+{% block contenido %}
+<div class="page-heading">
+        <div>
+            <p class="eyebrow">
+                CONOCÉ LO QUE REGISTRÁS
+            </p>
+            <h1>
+                Un espacio para tus comidas.
+            </h1>
+            <p>
+                Calculá por cantidades o cargá los valores de una etiqueta.
+            </p>
+        </div>
+        <span class="tag green">
+            {{ kcal }} kcal · {{ proteinas }} g de proteína hoy
+        </span>
+    </div>
+    <div class="content-columns">
+        <div>
+            <section class="card form-card">
+                <div class="card-heading">
+                    <div>
+                        <h2>
+                            Anotá lo que comiste
+                        </h2>
+                        <p>
+                            Valores orientativos. La marca y la preparación pueden cambiar el resultado.
+                        </p>
+                    </div>
+                    <span class="metric-icon yellow">
+                        {{ icono('food') }}
+                    </span>
+                </div>
+                <form method="post" action="{{ url_for('registrar_comida') }}" class="form-stack" id="food-calculator">
+                    {{ csrf() }}
+                    <input type="hidden" name="tipo" value="auto">
+                    <input type="hidden" name="volver" value="/alimentacion">
+                    <label>
+                        Qué comiste
+                        <input name="nombre" required maxlength="120" list="lista-alimentos" autocomplete="off" placeholder="Ej. arroz, banana, pollo">
+                    </label>
+                    <datalist id="lista-alimentos">
+                        {% for a in data.Alimentos %}
+                            <option value="{{ a.nombre }}"></option>
+                        {% endfor %}
+                    </datalist>
+                    <div class="form-row">
+                        <label>
+                            Gramos
+                            <input type="number" name="gramos" min="1" max="10000" value="100" step="0.1" required>
+                        </label>
+                        <label>
+                            Momento
+                            <select name="momento">
+                                {% for m in momentos %}
+                                    <option>
+                                        {{ m }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    </div>
+                    <label>
+                        Fecha
+                        <input type="date" name="fecha" value="{{ hoy.isoformat() }}" max="{{ hoy.isoformat() }}" required>
+                    </label>
+                    <button class="button primary" type="submit">
+                        Calcular y guardar {{ icono('check') }}
+                    </button>
+                </form>
+                <p class="field-help">
+                    Escribí el nombre y los gramos: el sistema busca el alimento en la tabla y calcula las kcal (gramos × kcal por 100 g ÷ 100). Si no aparece, usá la carga manual de abajo.
+                </p>
+            </section>
+            <section class="card form-card">
+                <div class="card-heading">
+                    <h2>
+                        ¿Tenés la etiqueta o el total?
+                    </h2>
+                    <span class="tag">
+                        Carga manual
+                    </span>
+                </div>
+                <form method="post" action="{{ url_for('registrar_comida') }}" class="form-stack">
+                    {{ csrf() }}
+                    <input type="hidden" name="tipo" value="manual">
+                    <input type="hidden" name="volver" value="/alimentacion">
+                    <label>
+                        Comida o preparación
+                        <input name="nombre" required maxlength="120" placeholder="Ej. Sándwich de pollo">
+                    </label>
+                    <div class="form-row three">
+                        <label>
+                            Peso total (g)
+                            <input type="number" name="gramos" min="1" max="10000" step="0.1" required>
+                        </label>
+                        <label>
+                            Kcal totales
+                            <input type="number" name="kcal" min="0" max="10000" step="0.1" required>
+                        </label>
+                        <label>
+                            Proteína total (g)
+                            <input type="number" name="proteinas_g" min="0" max="1000" step="0.1">
+                        </label>
+                    </div>
+                    <div class="form-row">
+                        <label>
+                            Momento
+                            <select name="momento">
+                                {% for m in momentos %}
+                                    <option>
+                                        {{ m }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label>
+                            Fecha
+                            <input type="date" name="fecha" value="{{ hoy.isoformat() }}" max="{{ hoy.isoformat() }}" required>
+                        </label>
+                    </div>
+                    <button class="button outline">
+                        Guardar comida {{ icono('check') }}
+                    </button>
+                </form>
+            </section>
+        </div>
+        <aside>
+            <section class="card photo-card">
+                <span class="assistant-icon">
+                    {{ icono('camera') }}
+                </span>
+                <span class="eyebrow">
+                    IA LOCAL OPCIONAL
+                </span>
+                <h2>
+                    Una foto.
+                    <br>
+                    Una estimación.
+                </h2>
+                <p>
+                    Con un modelo de visión local podés obtener un intervalo aproximado de calorías.
+                </p>
+                <form method="post" action="{{ url_for('estimar_foto') }}" enctype="multipart/form-data" class="form-stack">
+                    {{ csrf() }}
+                    <input type="hidden" name="volver" value="/alimentacion">
+                    <label class="upload-label">
+                        Foto de tu comida
+                        <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" required {% if not modo_ia %}disabled{% endif %}>
+                    </label>
+                    <button class="button primary full" {% if not modo_ia %}disabled{% endif %}>
+                        {{ icono('spark') }} Analizar foto
+                    </button>
+                </form>
+                <p class="field-help">
+                    {% if modo_ia %}
+                        La foto se procesa con Ollama en esta computadora y no se guarda. Puede tardar un momento.
+                    {% else %}
+                        La IA local está desactivada. Consultá cómo activarla gratis en Ajustes. El cálculo manual funciona sin ella.
+                    {% endif %}
+                </p>
+                <a class="text-link" href="{{ url_for('ajustes') }}#ia">
+                    Configurar IA local {{ icono('arrow') }}
+                </a>
+            </section>
+            {% if estimacion %}
+                <section class="card estimate">
+                    <span class="tag">
+                        Estimación sin guardar
+                    </span>
+                    <h2>
+                        {{ estimacion.descripcion }}
+                    </h2>
+                    <strong>
+                        {{ estimacion.kcal_min }}–{{ estimacion.kcal_max }} kcal
+                    </strong>
+                    <p>
+                        {{ estimacion.cantidad_estimada }}
+                    </p>
+                    <p>
+                        {{ estimacion.incertidumbre }}
+                    </p>
+                    <p class="field-help">
+                        Una foto no revela cantidades exactas ni ingredientes ocultos. Revisá los datos y usá la carga manual si querés registrarlos.
+                    </p>
+                </section>
+            {% endif %}
+        </aside>
+    </div>
+    <section class="card">
+        <div class="card-heading">
+            <div>
+                <h2>
+                    Lo que registraste hoy
+                </h2>
+                <p>
+                    Tu registro de {{ hoy.strftime('%d/%m/%Y') }}
+                </p>
+            </div>
+            <span class="tag">
+                {{ comidas|length }} entradas
+            </span>
+        </div>
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>
+                            Comida
+                        </th>
+                        <th>
+                            Momento
+                        </th>
+                        <th>
+                            Cantidad
+                        </th>
+                        <th>
+                            Kcal
+                        </th>
+                        <th>
+                            Proteína
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in comidas %}
+                        <tr>
+                            <td>
+                                <strong>
+                                    {{ c.nombre }}
+                                </strong>
+                                <small class="table-subtitle">
+                                    {{ c.origen }}
+                                </small>
+                            </td>
+                            <td>
+                                {{ c.momento }}
+                            </td>
+                            <td>
+                                {{ c.gramos }} g
+                            </td>
+                            <td>
+                                {{ c.kcal }}
+                            </td>
+                            <td>
+                                {{ c.proteinas_g }} g
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5">
+                                Todavía no agregaste comidas hoy.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}

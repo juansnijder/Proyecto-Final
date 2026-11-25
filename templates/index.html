@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% from 'componentes.html' import icono, csrf, grafico_peso with context %}
+{% block titulo %}
+    Inicio
+{% endblock %}
+{% block contenido %}
+<div class="page-heading">
+        <div>
+            <p class="eyebrow">
+                {{ dias[hoy.weekday()] }} · {{ hoy.strftime('%d/%m/%Y') }}
+            </p>
+            <h1>
+                Hola, {{ perfil.nombre }}
+                <span class="greeting-spark">
+                    ✳
+                </span>
+            </h1>
+            <p>
+                Un poco más cerca de tu mejor versión. Vamos a lo de hoy.
+            </p>
+        </div>
+        <a class="button primary" href="{{ url_for('entrenar') }}">
+            {{ icono('plus') }} Registrar entrenamiento
+        </a>
+    </div>
+    <section class="metric-grid" aria-label="Resumen de tus registros">
+        <article class="metric">
+            <span class="metric-icon green">
+                {{ icono('dumbbell') }}
+            </span>
+            <span class="metric-label">
+                Entrenamientos
+            </span>
+            <strong>
+                {{ sesiones_semana|length }}
+                <small>
+                    esta semana
+                </small>
+            </strong>
+            <p>
+                Del lunes a hoy
+            </p>
+        </article>
+        <article class="metric">
+            <span class="metric-icon peach">
+                {{ icono('chart') }}
+            </span>
+            <span class="metric-label">
+                Último peso
+            </span>
+            <strong>
+                {{ peso.peso_kg if peso else '—' }}
+                <small>
+                    kg
+                </small>
+            </strong>
+            <p>
+                {% if cambio is not none %}
+                    {{ '%+.1f'|format(cambio) }} kg desde el primer registro
+                {% else %}
+                    Registrá tu primer dato
+                {% endif %}
+            </p>
+        </article>
+        <article class="metric">
+            <span class="metric-icon yellow">
+                {{ icono('flame') }}
+            </span>
+            <span class="metric-label">
+                Alimentación de hoy
+            </span>
+            <strong>
+                {{ calorias }}
+                <small>
+                    kcal registradas
+                </small>
+            </strong>
+            <p>
+                Según las comidas que cargaste
+            </p>
+        </article>
+        </section>
+    <div class="dashboard-columns">
+        <div class="main-column">
+            <section class="today-card">
+                <div class="today-copy">
+                    <span class="tag light">
+                        {{ icono('calendar') }} TU PLAN PARA HOY
+                    </span>
+                    <h2>
+                        {{ plan.titulo }}
+                    </h2>
+                    <p>
+                        {% if plan.activo %}
+                            Tu rutina está lista. Lo que hagas hoy suma.
+                        {% else %}
+                            La recuperación también es parte del camino.
+                        {% endif %}
+                    </p>
+                    <div class="today-facts">
+                        <span>
+                            {{ icono('dumbbell') }} {{ ejercicios|length }} ejercicios
+                        </span>
+                        <span>
+                            {{ icono('clock') }} A tu ritmo
+                        </span>
+                    </div>
+                    <a class="button lime" href="{{ url_for('entrenar') if plan.activo else url_for('rutinas') }}">
+                        {{ 'Empezar entrenamiento' if plan.activo else 'Ver mi semana' }} {{ icono('arrow') }}
+                    </a>
+                </div>
+                <div class="today-art" aria-hidden="true">
+                    <div class="orbit-line">
+                    </div>
+                    <svg viewBox="0 0 230 230">
+                        <g transform="translate(115 115) rotate(-34)" fill="none" stroke="#c5ed91" stroke-width="10" stroke-linecap="round">
+                            <path d="M-45 0H45"/>
+                            <rect x="-68" y="-45" width="20" height="90" rx="7"/>
+                            <rect x="-87" y="-29" width="18" height="58" rx="5"/>
+                            <rect x="48" y="-45" width="20" height="90" rx="7"/>
+                            <rect x="69" y="-29" width="18" height="58" rx="5"/>
+                        </g>
+                    </svg>
+                    <span>
+                        MAKE IT COUNT.
+                    </span>
+                </div>
+            </section>
+            <section class="card week-card">
+                <div class="card-heading">
+                    <h2>
+                        Tu semana, a tu manera.
+                    </h2>
+                    <a class="text-link" href="{{ url_for('rutinas') }}">
+                        Editar rutina {{ icono('arrow') }}
+                    </a>
+                </div>
+                <div class="week-strip">
+                    {% for d in data.Dias|sort(attribute='dia') %}
+                        <a href="{{ url_for('rutinas', dia=d.dia) }}" class="week-day {% if d.dia == hoy.weekday() %}today{% endif %}">
+                            <span>
+                                {{ dias[d.dia][:3] }}
+                            </span>
+                            <i>
+                                {{ icono('dumbbell') if d.activo else '—' }}
+                            </i>
+                            <small>
+                                {{ 'Entreno' if d.activo else 'Descanso' }}
+                            </small>
+                        </a>
+                    {% endfor %}
+                </div>
+            </section>
+            <section class="card">
+                <div class="card-heading">
+                    <div>
+                        <h2>
+                            Tu progreso, sin apuro.
+                        </h2>
+                        <p>
+                            Últimos registros de peso · kg
+                        </p>
+                    </div>
+                    <a class="text-link" href="{{ url_for('progreso') }}">
+                        Ver detalle {{ icono('arrow') }}
+                    </a>
+                </div>
+                {{ grafico_peso(chart) }}
+            </section>
+        </div>
+        <div class="side-column">
+            <section class="card assistant-promo">
+                <span class="assistant-icon">
+                    {{ icono('spark') }}
+                </span>
+                <span class="eyebrow">
+                    UN POCO DE ORIENTACIÓN
+                </span>
+                <h2>
+                    Tu próximo paso,
+                    <br>
+                    más claro.
+                </h2>
+                <p>
+                    Consultá tu rutina de hoy o aprendé a leer tus registros.
+                </p>
+                <a class="button outline" href="{{ url_for('pagina_asistente') }}">
+                    Hablar con el asistente {{ icono('arrow') }}
+                </a>
+                <small>
+                    Modo guiado gratuito · IA local opcional
+                </small>
+            </section>
+            <section class="card recent-card">
+                <div class="card-heading">
+                    <h2>
+                        Últimas sesiones
+                    </h2>
+                </div>
+                {% for item in recientes %}
+                    <a class="recent-item" href="{{ url_for('progreso') }}#historial">
+                        <span class="recent-icon">
+                            {{ icono('check') }}
+                        </span>
+                        <span>
+                            <strong>
+                                {{ item.rutina or dias[item.dia] }}
+                            </strong>
+                            <small>
+                                {{ item.fecha[8:10] }}/{{ item.fecha[5:7] }} · {{ item.duracion_min }} min
+                            </small>
+                        </span>
+                        {{ icono('arrow') }}
+                    </a>
+                {% else %}
+                    <p class="muted">
+                        Tu primera sesión aparecerá acá.
+                    </p>
+                {% endfor %}
+            </section>
+        </div>
+    </div>
+{% endblock %}

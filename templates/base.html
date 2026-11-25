@@ -1,0 +1,165 @@
+{% from 'componentes.html' import icono, csrf with context %}
+<!DOCTYPE html>
+<html lang="es-AR" class="{{ 'oscuro' if perfil.tema == 'oscuro' else '' }}">
+    <head>
+<meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="theme-color" content="#173d2c">
+        <meta name="description" content="FatToFit: tus rutinas, entrenamientos y progreso en un mismo lugar.">
+        <title>
+            {% block titulo %}
+                Tu espacio de entrenamiento
+            {% endblock %}
+            · FatToFit
+        </title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='movil.css') }}">
+        <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+        <link rel="icon" href="{{ url_for('static', filename='icons/icon-192.png') }}" sizes="192x192" type="image/png">
+        <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-title" content="FatToFit">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        {% block cabecera_extra %}{% endblock %}
+    </head>
+    {% set mostrar_reloj = (request.endpoint == 'entrenar' or session.get('reloj')) and not session.get('reloj_oculto') %}
+    <body class="{% if mostrar_reloj %}con-reloj{% endif %}">
+        <a class="skip" href="#contenido">
+            Saltar al contenido
+        </a>
+        <svg class="svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <symbol id="i-home" viewBox="0 0 24 24">
+                <path d="m3 10 9-7 9 7v10H3Z"/>
+                <path d="M9 20v-7h6v7"/>
+            </symbol>
+            <symbol id="i-calendar" viewBox="0 0 24 24">
+                <rect x="3" y="5" width="18" height="16" rx="3"/>
+                <path d="M7 3v5m10-5v5M3 11h18m-13 4h1m6 0h1m-8 3h1"/>
+            </symbol>
+            <symbol id="i-dumbbell" viewBox="0 0 24 24">
+                <path d="m8 8 8 8M4 7l3-3m-4 7 8-8M13 21l8-8m-4 7 3-3M2 8l6-6m8 20 6-6"/>
+            </symbol>
+            <symbol id="i-chart" viewBox="0 0 24 24">
+                <path d="M4 3v17h17M7 15l4-5 4 3 6-8"/>
+            </symbol>
+            <symbol id="i-food" viewBox="0 0 24 24">
+                <path d="M4 3v5a3 3 0 0 0 6 0V3M7 3v18M20 3c-5 2-5 10 0 10m0-10v18"/>
+            </symbol>
+            <symbol id="i-spark" viewBox="0 0 24 24">
+                <path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4ZM20 2v4m-2-2h4"/>
+            </symbol>
+            <symbol id="i-settings" viewBox="0 0 24 24">
+                <path d="M4 7h16M4 17h16"/>
+                <circle cx="8" cy="7" r="3"/>
+                <circle cx="16" cy="17" r="3"/>
+            </symbol>
+            <symbol id="i-arrow" viewBox="0 0 24 24">
+                <path d="M4 12h16m-6-6 6 6-6 6"/>
+            </symbol>
+            <symbol id="i-plus" viewBox="0 0 24 24">
+                <path d="M12 5v14M5 12h14"/>
+            </symbol>
+            <symbol id="i-check" viewBox="0 0 24 24">
+                <path d="m5 12 4 4L20 5"/>
+            </symbol>
+            <symbol id="i-drop" viewBox="0 0 24 24">
+                <path d="M12 2c-2 5-7 9-7 13a7 7 0 0 0 14 0c0-4-5-8-7-13Z"/>
+            </symbol>
+            <symbol id="i-clock" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M12 6v6l4 2"/>
+            </symbol>
+            <symbol id="i-download" viewBox="0 0 24 24">
+                <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>
+            </symbol>
+            <symbol id="i-camera" viewBox="0 0 24 24">
+                <path d="M3 7h5l2-3h4l2 3h5v14H3Z"/>
+                <circle cx="12" cy="13" r="4"/>
+            </symbol>
+            <symbol id="i-trash" viewBox="0 0 24 24">
+                <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>
+            </symbol>
+            <symbol id="i-play" viewBox="0 0 24 24">
+                <path d="m8 4 12 8-12 8Z"/>
+            </symbol>
+            <symbol id="i-more" viewBox="0 0 24 24">
+                <path d="M4 7h16M4 12h16M4 17h16"/>
+            </symbol>
+            <symbol id="i-flame" viewBox="0 0 24 24">
+                <path d="M13 2c1 6-5 6-3 11 2-1 3-3 3-5 5 4 7 7 4 11a7 7 0 0 1-11-1C2 12 10 8 13 2Z"/>
+            </symbol>
+        </svg>
+        {% set navegacion = [('inicio','home','Inicio'),('rutinas','calendar','Rutinas'),('entrenar','dumbbell','Entrenar'),('progreso','chart','Progreso')] %}
+        {% set mas_endpoints = ['alimentacion','pagina_asistente','ajustes'] %}
+        <div class="app-shell">
+            <header class="topbar">
+                <div class="topbar-inicio">
+                <a class="volver-atras" href="{{ url_for('volver_atras') }}" aria-label="Volver atrás" title="Volver atrás">←</a>
+                <h1 class="app-title">
+                    {% block seccion %}
+                        Inicio
+                    {% endblock %}
+                </h1>
+                </div>
+                <div class="topbar-acciones">
+                    <form method="post" action="{{ url_for('cambiar_tema') }}" class="tema-form">
+                        {{ csrf() }}
+                        <input type="hidden" name="volver" value="{{ request.path }}">
+                        <input type="hidden" name="tema" value="{{ 'claro' if perfil.tema == 'oscuro' else 'oscuro' }}">
+                        <button type="submit" class="tema-btn" aria-label="Cambiar a modo {{ 'claro' if perfil.tema == 'oscuro' else 'oscuro' }}">
+                            {{ 'Claro' if perfil.tema == 'oscuro' else 'Oscuro' }}
+                        </button>
+                    </form>
+                    <a href="{{ url_for('ajustes') }}" class="avatar" aria-label="Abrir ajustes de {{ perfil.nombre }}">
+                        {% if perfil.foto %}<img src="{{ url_for('ver_foto', v=perfil.foto) }}" alt="">{% else %}{{ perfil.nombre[0]|upper }}{% endif %}
+                    </a>
+                </div>
+            </header>
+            {% if mostrar_reloj %}
+            <aside class="descanso-global" aria-label="Contador de descanso">
+                <iframe src="{{ url_for('reloj_descanso', tema=perfil.tema, segundos=descanso_preferido) }}" title="Tiempo restante de descanso" class="reloj-global-frame"></iframe>
+            </aside>
+            {% endif %}
+            <main id="contenido">
+                {% for category, message in get_flashed_messages(with_categories=true) %}
+                    <div class="notice {{ category }}" role="status">
+                        {{ icono('check') if category == 'success' else icono('spark') }}
+                        <span>
+                            {{ message }}
+                        </span>
+                    </div>
+                {% endfor %}
+                {% block contenido %}
+                {% endblock %}
+                <footer class="app-footer">
+                    <span>
+                        FatToFit · Un paso a la vez.
+                    </span>
+                    <a href="{{ url_for('descargar_excel') }}">
+                        Mis datos, en Excel {{ icono('download') }}
+                    </a>
+                </footer>
+            </main>
+        </div>
+        <nav class="tabbar" aria-label="Navegación principal">
+            {% for endpoint, icon, label in navegacion %}
+                <a href="{{ url_for(endpoint) }}" class="{% if request.endpoint == endpoint %}on{% endif %}" {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>
+                    {{ icono(icon) }}
+                    <span>{{ label }}</span>
+                </a>
+            {% endfor %}
+            <details class="tab-more {% if request.endpoint in mas_endpoints %}on{% endif %}">
+                <summary>
+                    {{ icono('more') }}
+                    <span>Más</span>
+                </summary>
+                <div class="sheet">
+                    <a href="{{ url_for('alimentacion') }}">{{ icono('food') }} Alimentación</a>
+                    <a href="{{ url_for('pagina_asistente') }}">{{ icono('spark') }} Asistente</a>
+                    <a href="{{ url_for('ajustes') }}">{{ icono('settings') }} Ajustes</a>
+                    <a href="{{ url_for('descargar_excel') }}">{{ icono('download') }} Descargar mis datos (Excel)</a>
+                </div>
+            </details>
+        </nav>
+    </body>
+</html>

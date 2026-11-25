@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% from 'componentes.html' import icono, csrf, campos_ejercicio with context %}
+{% block titulo %}
+    Mis rutinas
+{% endblock %}
+{% block seccion %}
+    Mis rutinas
+{% endblock %}
+{% block contenido %}
+<div class="page-heading">
+        <div>
+            <p class="eyebrow">
+                PLANIFICAR ES EL PRIMER PASO
+            </p>
+            <h1>
+                Tu semana de entrenamiento.
+            </h1>
+            <p>
+                Elegí qué trabajar cada día. Tu planificación se repite cada semana.
+            </p>
+        </div>
+        <a class="button primary" href="{{ url_for('entrenar', dia=dia) }}">
+            {{ icono('play') }} Entrenar este día
+        </a>
+    </div>
+    <nav class="day-tabs" aria-label="Días de la semana">
+        {% for d in range(7) %}
+            <a class="{% if d == dia %}selected{% endif %}" href="{{ url_for('rutinas', dia=d) }}" {% if d == dia %}aria-current="page"{% endif %}>
+                {{ dias[d] }}
+            </a>
+        {% endfor %}
+    </nav>
+    <div class="content-columns">
+        <div>
+            <section class="card">
+                <div class="card-heading">
+                    <div>
+                        <span class="eyebrow">
+                            {{ dias[dia] }}
+                        </span>
+                        <h2>
+                            {{ plan.titulo }}
+                        </h2>
+                    </div>
+                    <span class="tag {{ 'green' if plan.activo else '' }}">
+                        {{ 'Día activo' if plan.activo else 'Descanso' }}
+                    </span>
+                </div>
+                <form action="{{ url_for('guardar_dia') }}" method="post" class="day-settings">
+                    {{ csrf() }}
+                    <input type="hidden" name="dia" value="{{ dia }}">
+                    <input type="hidden" name="volver" value="/rutinas">
+                    <label>
+                        Nombre de tu rutina
+                        <input name="titulo" value="{{ plan.titulo }}" maxlength="80" required>
+                    </label>
+                    <label class="check-label">
+                        <input type="checkbox" name="activo" value="si" {% if plan.activo %}checked{% endif %}>
+                        Día de entrenamiento
+                    </label>
+                    <button class="button outline" type="submit">
+                        Guardar día
+                    </button>
+                </form>
+            </section>
+            <section class="card exercise-list">
+                <div class="card-heading">
+                    <h2>
+                        Ejercicios planificados
+                    </h2>
+                    <span class="count-label">
+                        {{ ejercicios|length }} ejercicios
+                    </span>
+                </div>
+                {% for e in ejercicios %}
+                    <article class="exercise-item">
+                        <div class="exercise-title">
+                            <span class="exercise-number">
+                                {{ '%02d'|format(loop.index) }}
+                            </span>
+                            <div>
+                                <h3>
+                                    {{ e.nombre }}
+                                </h3>
+                                <p>
+                                    {{ e.grupo }}
+                                    <span>
+                                        ·
+                                    </span>
+                                    {{ e.series }} × {{ e.reps }}
+                                </p>
+                            </div>
+                            <form method="post" action="{{ url_for('eliminar_ejercicio') }}">
+                                {{ csrf() }}
+                                <input type="hidden" name="id" value="{{ e.id }}">
+                                <input type="hidden" name="dia" value="{{ dia }}">
+                                <button class="icon-button danger" aria-label="Quitar {{ e.nombre }}">
+                                    {{ icono('trash') }}
+                                </button>
+                            </form>
+                        </div>
+                        <details class="edit-exercise">
+                            <summary>
+                                Editar ejercicio
+                            </summary>
+                            <form method="post" action="{{ url_for('guardar_ejercicio') }}" class="form-stack">
+                                {{ campos_ejercicio(dia, e) }}
+                                <button class="button primary" type="submit">
+                                    Guardar cambios
+                                </button>
+                            </form>
+                        </details>
+                    </article>
+                {% else %}
+                    <div class="empty-state">
+                        {{ icono('dumbbell') }}
+                        <h3>
+                            Tu rutina está por empezar.
+                        </h3>
+                        <p>
+                            Agregá el primer ejercicio con el formulario de al lado.
+                        </p>
+                    </div>
+                {% endfor %}
+            </section>
+        </div>
+        <aside>
+            <section class="card form-card">
+                <div class="card-heading">
+                    <h2>
+                        Sumar un ejercicio
+                    </h2>
+                    {{ icono('plus') }}
+                </div>
+                <form action="{{ url_for('guardar_ejercicio') }}" method="post" class="form-stack">
+                    {{ campos_ejercicio(dia) }}
+                    <button class="button primary full" type="submit">
+                        Agregar a {{ dias[dia]|lower }} {{ icono('plus') }}
+                    </button>
+                </form>
+            </section>
+            <div class="help-note">
+                {{ icono('calendar') }}
+                <p>
+                    La rutina es tu plan. En
+                    <strong>
+                        Entrenar
+                    </strong>
+                    registrás el peso y las repeticiones que realizaste en cada serie. Podés adaptar tu planificación con tu profesor o entrenador.
+                </p>
+            </div>
+        </aside>
+    </div>
+{% endblock %}

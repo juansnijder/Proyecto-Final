@@ -1,0 +1,29 @@
+{% from 'componentes.html' import csrf with context %}
+<!doctype html>
+<html lang="es-AR" class="{{ 'oscuro' if oscuro else '' }}">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    {% if activo %}<meta http-equiv="refresh" content="1">{% endif %}
+    <title>Descanso · FatToFit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='reloj.css') }}">
+</head>
+<body>
+    <div class="lectura"><span class="etiqueta">DESCANSO</span><strong class="tiempo" role="timer">{{ texto }}</strong></div>
+    <div class="acciones">
+        <span class="estado">{{ 'En marcha' if activo else '¡Descanso terminado!' if terminado else 'Listo / en pausa' }}</span>
+        <form method="post" action="{{ url_for('controlar_descanso') }}">
+            {{ csrf() }}
+            <input type="hidden" name="segundos" value="{{ duracion }}">
+            <input type="hidden" name="volver" value="reloj">
+            {% if activo %}<button class="btn principal" name="accion" value="pausar">Pausar</button>
+            {% else %}<button class="btn principal" name="accion" value="iniciar">{{ 'Otro descanso' if terminado else 'Iniciar' }}</button>{% endif %}
+            <button class="btn" name="accion" value="reiniciar" aria-label="Reiniciar descanso">↺</button>
+        </form>
+    </div>
+    <a class="configurar" href="{{ url_for('entrenar', configurar='descanso') }}#descanso" target="_top" aria-label="Configurar duración del descanso" title="Configurar descanso">⚙</a>
+    <form method="post" action="{{ url_for('ocultar_contador') }}" target="_top" class="ocultar-form">
+        {{ csrf() }}
+        <button type="submit" class="cerrar-contador" aria-label="Ocultar contador" title="Ocultar contador">×</button>
+    </form>
+</body>
+</html>

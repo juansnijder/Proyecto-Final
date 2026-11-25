@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% from 'componentes.html' import icono, csrf, grafico_peso with context %}
+{% block titulo %}
+    Mi progreso
+{% endblock %}
+{% block seccion %}
+    Mi progreso
+{% endblock %}
+{% block contenido %}
+<div class="page-heading">
+        <div>
+            <p class="eyebrow">
+                EL PROCESO TAMBIÉN CUENTA
+            </p>
+            <h1>
+                Mirá todo lo que avanzaste.
+            </h1>
+            <p>
+                Tus registros, sin comparaciones. El progreso tiene muchas formas.
+            </p>
+        </div>
+        <a class="button outline" href="{{ url_for('descargar_excel') }}">
+            {{ icono('download') }} Descargar Excel
+        </a>
+    </div>
+    <div class="content-columns">
+        <div>
+            <section class="card">
+                <div class="card-heading">
+                    <div>
+                        <h2>
+                            Evolución del peso
+                        </h2>
+                        <p>
+                            {{ pesos|length }} registros · kg
+                        </p>
+                    </div>
+                    {% if pesos %}
+                        <strong class="chart-value">
+                            {{ pesos[-1].peso_kg }}
+                            <small>
+                                kg
+                            </small>
+                        </strong>
+                    {% endif %}
+                </div>
+                {{ grafico_peso(chart) }}
+                <p class="field-help">
+                    Cambios desde el primer registro:
+                    {% if pesos|length > 1 %}
+                        {{ '%+.1f'|format(pesos[-1].peso_kg - pesos[0].peso_kg) }} kg
+                    {% else %}
+                        necesitás al menos dos registros.
+                    {% endif %}
+                </p>
+            </section>
+            <section class="card">
+                <div class="card-heading">
+                    <h2>
+                        Registros de peso
+                    </h2>
+                    <span class="tag">
+                        {{ pesos|length }} datos
+                    </span>
+                </div>
+                <div class="table-scroll">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Fecha
+                                </th>
+                                <th>
+                                    Peso
+                                </th>
+                                <th>
+                                    Nota
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in pesos|reverse %}
+                                <tr>
+                                    <td>
+                                        {{ p.fecha }}
+                                    </td>
+                                    <td>
+                                        <strong>
+                                            {{ p.peso_kg }} kg
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        {{ p.nota or '—' }}
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="3">
+                                        Todavía no hay registros.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+        <aside>
+            <section class="card form-card">
+                <span class="metric-icon peach">
+                    {{ icono('plus') }}
+                </span>
+                <h2>
+                    Un nuevo registro.
+                </h2>
+                <form action="{{ url_for('registrar_peso') }}" method="post" class="form-stack">
+                    {{ csrf() }}
+                    <input type="hidden" name="volver" value="/progreso">
+                    <label>
+                        Fecha
+                        <input name="fecha" type="date" required value="{{ hoy.isoformat() }}" max="{{ hoy.isoformat() }}">
+                    </label>
+                    <label>
+                        Peso (kg)
+                        <input name="peso_kg" type="number" min="10" max="500" step="0.1" required placeholder="Ej. 78.2">
+                    </label>
+                    <label>
+                        Nota opcional
+                        <input name="nota" maxlength="200" placeholder="Por ejemplo: registro de la mañana">
+                    </label>
+                    <button class="button primary full">
+                        Guardar peso {{ icono('check') }}
+                    </button>
+                </form>
+                <p class="field-help">
+                    Un registro por fecha. Si repetís la fecha, se actualiza el anterior.
+                </p>
+            </section>
+            <section class="card compact-stat">
+                <span>
+                    {{ icono('dumbbell') }} VOLUMEN REGISTRADO
+                </span>
+                <strong>
+                    {{ '{:,.0f}'.format(volumen).replace(',', '.') }}
+                    <small>
+                        kg
+                    </small>
+                </strong>
+                <p>
+                    Suma de peso × repeticiones de todas las series. No incluye el peso corporal.
+                </p>
+            </section>
+        </aside>
+    </div>
+    <section class="card" id="historial">
+        <div class="card-heading">
+            <div>
+                <h2>
+                    Tu historial de entrenamiento
+                </h2>
+                <p>
+                    Las sesiones guardadas conservan sus ejercicios aunque después cambies la rutina.
+                </p>
+            </div>
+            <span class="tag green">
+                {{ historial|length }} sesiones
+            </span>
+        </div>
+        {% for s in historial %}
+            <details class="session-history">
+                <summary>
+                    <span class="recent-icon">
+                        {{ icono('check') }}
+                    </span>
+                    <span>
+                        <strong>
+                            {{ s.rutina or 'Entrenamiento' }}
+                        </strong>
+                        <small>
+                            {{ dias[s.dia] }} · {{ s.fecha }} · {{ s.duracion_min }} min · {{ detalles[s.id]|length }} series realizadas
+                        </small>
+                    </span>
+                    <span class="history-open">
+                        Ver series +
+                    </span>
+                </summary>
+                <div class="table-scroll">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Ejercicio
+                                </th>
+                                <th>
+                                    Serie
+                                </th>
+                                <th>
+                                    Reps
+                                </th>
+                                <th>
+                                    Peso
+                                </th>
+                                <th>
+                                    Técnica
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for serie in detalles[s.id] %}
+                                <tr>
+                                    <td>
+                                        {{ serie.ejercicio }}
+                                    </td>
+                                    <td>
+                                        {{ serie.numero }}
+                                    </td>
+                                    <td>
+                                        {{ serie.reps }}
+                                    </td>
+                                    <td>
+                                        {{ serie.peso_kg }} kg
+                                    </td>
+                                    <td>
+                                        {{ {'Sí': 'Bien', 'No': 'Mal'}.get(serie.tecnica, serie.tecnica) or '—' }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if s.notas %}
+                    <p class="history-note">
+                        {{ s.notas }}
+                    </p>
+                {% endif %}
+            </details>
+        {% else %}
+            <div class="empty-state">
+                <p>
+                    Todavía no registraste entrenamientos.
+                </p>
+                <a class="button outline" href="{{ url_for('entrenar') }}">
+                    Ir a entrenar
+                </a>
+            </div>
+        {% endfor %}
+    </section>
+{% endblock %}

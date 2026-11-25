@@ -1,0 +1,50 @@
+FATTOFIT FINAL — COMPROBACIONES DEL 18/11/2026
+
+40 comprobaciones automáticas aprobadas en 49,887 segundos.
+Comando para repetir: python pruebas.py.
+Se utilizan copias temporales del Excel, sin modificar la base de la entrega.
+
+DATOS CONSERVADOS
+Se copiaron la cuenta, hashes de contraseña/PIN, rutinas, ejercicios,
+sesiones, series, peso, comidas, mensajes y fotos de la vista de Windows.
+Se verificó la igualdad de los registros y credenciales. No se borró ninguna
+cuenta ni ningún registro del gimnasio. No había vinculaciones ficticias
+activas que retirar en la copia recibida al preparar esta entrega.
+
+INTERFAZ FINAL
+Sin carteles de demostración, sin tarjetas ficticias y sin JavaScript.
+Conserva los ejercicios y Ajustes desplegables, el registro de rutina
+realizada, fecha/duración/nota, el contador configurable/ocultable y Volver.
+No hay endpoint /rfid/simular ni opción de inicio --simular.
+
+LECTOR
+Un controlador sustituto verificó este recorrido del código:
+1. Preparar RC522 sin consultar tarjetas antes de una solicitud.
+2. Pulsar Asociar con una cuenta y PIN configurados.
+3. Reservar lectura para ese navegador y comenzar read_id_no_block.
+4. Recibir UID, mostrar confirmación y guardarlo en la cuenta correcta.
+5. Cerrar sesión, presentar ese UID e ingresar con el PIN de la cuenta.
+Se comprobó también ausencia de lector, falta de PIN, UID inventado,
+lecturas vencidas/repetidas/de otro navegador y tarjeta ya vinculada.
+
+SERVIDOR
+Waitress 3.0.2, un proceso y ocho hilos. El RC522 tiene un hilo separado.
+La versión final se inició en Windows con el lector no disponible.
+HTTP real en 127.0.0.1:5002/ingresar: 200; cabecera Server: waitress.
+La ruta de simulación devuelve 404. No aparecen avisos de demostración.
+En Raspberry el inicio normal escucha en 0.0.0.0:5001 para la red local.
+Las computadoras cliente acceden por navegador a la IP de la Raspberry.
+
+ALCANCE Y PENDIENTES
+No había Raspberry ni lector físico en el entorno de revisión.
+No se comprobó ejecución en Raspberry Pi OS, GPIO/SPI reales, cableado,
+alimentación, compatibilidad del llavero ni conectividad de la red escolar.
+No se probó un modelo real de Ollama ni análisis real de fotos.
+No se hizo una inspección visual automatizada del navegador.
+
+En el colegio, ejecutar primero probar_lector.py y comprobar un UID.
+Luego detenerlo e iniciar python app.py. Asociar un llavero real desde
+Ajustes y probar ingreso con PIN desde dos computadoras de la misma red.
+El paso a paso y la tabla de conexiones están en INSTALAR-EN-RASPBERRY.md.
+HTTP de la LAN no cifra las claves en tránsito; usar credenciales del
+proyecto y no exponer directamente el puerto a Internet.

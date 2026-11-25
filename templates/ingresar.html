@@ -1,0 +1,159 @@
+{% from 'componentes.html' import csrf with context %}
+<!doctype html>
+<html lang="es-AR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#173d2c">
+    {% if modo == 'rfid' and estado_lectura == 'esperando' %}
+    <meta http-equiv="refresh" content="2">
+    {% endif %}
+    <title>Ingresar · FatToFit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='movil.css') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <style>
+        body { padding: 28px 16px 32px !important; }
+        .auth-title { font-size: 28px; letter-spacing: -.6px; margin: 4px 0 6px; }
+        .auth-card { margin-bottom: 16px; }
+        .auth-card h2 { margin-bottom: 4px; }
+        .auth-card p.muted { margin: 0 0 14px; }
+        .rfid-box { border: 1px dashed #8db071; background: #f4f7ed; border-radius: 14px; padding: 16px; margin-bottom: 14px; text-align: center; }
+        .rfid-box strong { display: block; font-size: 15px; color: #173d2c; margin-bottom: 4px; }
+        .rfid-box span { font-size: 13px; color: #5b6b61; }
+    </style>
+</head>
+<body>
+    <main>
+        <p class="eyebrow">FATTOFIT</p>
+        <h1 class="auth-title">Tu cuenta, tus rutinas.</h1>
+        <p class="muted">Cada cuenta guarda sus propias rutinas, sesiones, peso y comidas.</p>
+
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+            {% for category, message in mensajes %}
+                <div class="notice {{ category }}" role="status">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="day-tabs" role="tablist" aria-label="Método de ingreso">
+            <a href="{{ url_for('ingresar', modo='clave') }}" class="{{ 'selected' if modo != 'rfid' else '' }}">
+                Usuario y contraseña
+            </a>
+            <a href="{{ url_for('ingresar', modo='rfid') }}" class="{{ 'selected' if modo == 'rfid' else '' }}">
+                Tarjeta RFID y PIN
+            </a>
+        </div>
+
+        {% if modo == 'rfid' %}
+        <section class="card auth-card">
+            <div class="card-heading">
+                <h2>Ingresar con tarjeta RFID</h2>
+                <span class="tag {{ 'green' if rfid_disponible else '' }}">
+                    {{ 'RC522 activo' if rfid_disponible else 'Esperando lector' }}
+                </span>
+            </div>
+
+            {% if estado_lectura in ('sin_lector', 'ocupado', 'inactivo') %}
+                {% include 'estado_lector.html' %}
+                <form method="post" action="{{ url_for('cancelar_rfid') }}" class="form-stack">
+                    {{ csrf() }}<button class="button outline full">Reintentar lectura</button>
+                </form>
+            {% elif not uid_detectado %}
+                <div class="rfid-box">
+                    <strong>Acercá tu tarjeta o llavero al lector RC522</strong>
+                    <span>Tenés 45 segundos para acercarla. Después de detectarla, tenés 45 segundos para ingresar el PIN.</span>
+                </div>
+                <a class="button outline full" href="{{ url_for('ingresar', modo='rfid') }}">
+                    Comprobar lectura ahora
+                </a>
+            {% elif tarjeta_no_asociada %}
+                <div class="notice error" role="status">
+                    Se detectó la tarjeta ({{ enmascarar_uid(uid_detectado) }}), pero todavía no está asociada a ninguna cuenta. Ingresá con usuario y contraseña y vinculala desde Ajustes.
+                </div>
+                <form method="post" action="{{ url_for('cancelar_rfid') }}" class="form-stack">
+                    {{ csrf() }}
+                    <button class="button outline full" type="submit">Probar con otra tarjeta</button>
+                </form>
+            {% else %}
+                <div class="rfid-box">
+                    <strong>Tarjeta detectada · {{ cuenta_rfid.nombre }}</strong>
+                    <span>UID {{ enmascarar_uid(uid_detectado) }} reconocido. Ingresá tu PIN personal para entrar.</span>
+                </div>
+                <form method="post" action="{{ url_for('entrar_rfid') }}" class="form-stack">
+                    {{ csrf() }}
+                    <input type="hidden" name="lectura" value="{{ lectura_id }}">
+                    <label>
+                        PIN personal
+                        <input type="password" name="pin" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" required autofocus placeholder="Tu PIN de 4 a 8 números">
+                    </label>
+                    <button class="button primary full" type="submit">Entrar a mi perfil</button>
+                </form>
+                <form method="post" action="{{ url_for('cancelar_rfid') }}" class="form-stack" style="margin-top: 10px;">
+                    {{ csrf() }}
+                    <button class="button outline full" type="submit">Usar otra tarjeta</button>
+                </form>
+            {% endif %}
+        </section>
+        {% else %}
+        <section class="card auth-card">
+            <h2>Ingresar con usuario y contraseña</h2>
+            <p class="muted">Usá el nombre de usuario y la contraseña de tu cuenta.</p>
+            <form method="post" action="{{ url_for('entrar') }}" class="form-stack">
+                {{ csrf() }}
+                <label>
+                    Nombre de usuario
+                    <input name="nombre" required maxlength="60" autocomplete="username">
+                </label>
+                <label>
+                    Contraseña
+                    <input type="password" name="clave" required maxlength="100" autocomplete="current-password">
+                </label>
+                <button class="button primary full" type="submit">Entrar</button>
+            </form>
+        </section>
+        {% endif %}
+
+        <section class="card auth-card">
+            <h2>Crear cuenta nueva</h2>
+            <p class="muted">Guardá tu usuario, contraseña y PIN personal. Después podés asociar tu tarjeta RFID en Ajustes.</p>
+            <form method="post" action="{{ url_for('crear_cuenta') }}" class="form-stack">
+                {{ csrf() }}
+                <label>
+                    Nombre de usuario
+                    <input name="nombre" required maxlength="60" autocomplete="nickname" placeholder="Ej. Lucía">
+                </label>
+                <div class="form-row">
+                    <label>
+                        Contraseña (mín. 4 caracteres)
+                        <input type="password" name="clave" required minlength="4" maxlength="100" autocomplete="new-password">
+                    </label>
+                    <label>
+                        PIN personal (4 a 8 números)
+                        <input type="password" name="pin" inputmode="numeric" pattern="[0-9]{4,8}" required minlength="4" maxlength="8" placeholder="Ej. 1234">
+                    </label>
+                </div>
+                <label>
+                    Tu objetivo
+                    <input name="objetivo" required maxlength="160" placeholder="Ej. Ganar fuerza y constancia">
+                </label>
+                <div class="form-row">
+                    <label>
+                        Altura (cm), opcional
+                        <input type="number" name="altura_cm" min="50" max="250" step="0.1">
+                    </label>
+                    <label>
+                        Peso objetivo (kg), opcional
+                        <input type="number" name="meta_peso_kg" min="10" max="500" step="0.1">
+                    </label>
+                </div>
+                <button class="button primary full" type="submit">Crear cuenta</button>
+            </form>
+        </section>
+
+        <p class="field-help">
+            Las contraseñas y los PIN se almacenan mediante hashes seguros, nunca como texto visible en Excel. El UID de una tarjeta siempre requiere tu PIN para entrar.
+        </p>
+    </main>
+</body>
+</html>

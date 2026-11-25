@@ -1,0 +1,89 @@
+{% macro icono(nombre, clase='') -%}
+    <svg class="icon {{ clase }}" aria-hidden="true">
+        <use href="#i-{{ nombre }}">
+    </use>
+</svg>
+{%- endmacro %}
+{% macro csrf() -%}
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    {%- endmacro %}
+    {% macro grafico_peso(chart) -%}
+        {% if chart %}
+            <div class="chart-wrap">
+                <svg viewBox="0 0 760 230" class="weight-chart" role="img" aria-label="Evolución del peso corporal en kilogramos, del {{ chart.first }} al {{ chart.last }}">
+                    <defs>
+                        <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#398265" stop-opacity=".15"/>
+                            <stop offset="100%" stop-color="#398265" stop-opacity="0"/>
+                        </linearGradient>
+                    </defs>
+                    {% for y in [45, 90, 135, 180] %}
+                        <line x1="50" x2="725" y1="{{ y }}" y2="{{ y }}" stroke="#e9eeeb" stroke-dasharray="4 5"/>
+                    {% endfor %}
+                    <text x="0" y="48" class="axis-label">
+                        {{ chart.max }}
+                    </text>
+                    <text x="0" y="183" class="axis-label">
+                        {{ chart.min }}
+                    </text>
+                    <polygon points="{{ chart.area }}" fill="url(#chart-fill)"/>
+                    <polyline points="{{ chart.path }}" fill="none" stroke="#277957" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    {% for p in chart.points %}
+                        <circle cx="{{ p.x }}" cy="{{ p.y }}" r="4" stroke="white" stroke-width="2" fill="#277957">
+                        <title>
+                            {{ p.fecha }}: {{ p.peso }} kg
+                        </title>
+                    </circle>
+                {% endfor %}
+                <text x="50" y="222" class="axis-label">
+                    {{ chart.first[8:10] }}/{{ chart.first[5:7] }}
+                </text>
+                <text x="675" y="222" class="axis-label">
+                    {{ chart.last[8:10] }}/{{ chart.last[5:7] }}
+                </text>
+            </svg>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            {{ icono('chart') }}
+            <h3>
+                Tu progreso empieza acá.
+            </h3>
+            <p>
+                Registrá tu peso para ver cómo cambia con el tiempo.
+            </p>
+        </div>
+    {% endif %}
+    {%- endmacro %}
+    {% macro campos_ejercicio(dia, ejercicio=none) -%}
+        {{ csrf() }}
+        <input type="hidden" name="dia" value="{{ dia }}">
+        <input type="hidden" name="volver" value="/rutinas">
+        {% if ejercicio %}
+            <input type="hidden" name="id" value="{{ ejercicio.id }}">
+        {% endif %}
+        <label>
+            Nombre del ejercicio
+            <input name="nombre" required maxlength="100" placeholder="Ej. Press de banca" value="{{ ejercicio.nombre if ejercicio else '' }}">
+        </label>
+        <label>
+            Grupo muscular
+            <select name="grupo" required>
+                {% for grupo in ['Pecho','Espalda','Bíceps','Tríceps','Piernas','Hombros','Core','Cardio','Movilidad','Otro'] %}
+                    <option {% if ejercicio and ejercicio.grupo == grupo %}selected{% endif %}>
+                        {{ grupo }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+        <div class="form-row">
+            <label>
+                Series
+                <input type="number" name="series" min="1" max="10" value="{{ ejercicio.series if ejercicio else 3 }}" required>
+            </label>
+            <label>
+                Repeticiones
+                <input type="number" name="reps" min="1" max="50" value="{{ ejercicio.reps if ejercicio else 10 }}" required>
+            </label>
+        </div>
+        {%- endmacro %}

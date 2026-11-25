@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% from 'componentes.html' import icono, csrf with context %}
+{% block titulo %}
+    Asistente
+{% endblock %}
+{% block seccion %}
+    Asistente
+{% endblock %}
+{% block contenido %}
+<div class="page-heading">
+        <div>
+            <p class="eyebrow">
+                TU REGISTRO, MÁS CLARO
+            </p>
+            <h1>
+                Un poco de ayuda suma.
+            </h1>
+            <p>
+                Consultá tus datos o resolvé dudas sobre cómo usar FatToFit.
+            </p>
+        </div>
+        <span class="tag green">
+            {{ 'IA local disponible' if modo_ia else 'Asistente guiado · Gratis' }}
+        </span>
+    </div>
+    <div class="assistant-layout">
+        <section class="card chat-card">
+            <div class="chat-welcome">
+                <span class="assistant-icon">
+                    {{ icono('spark') }}
+                </span>
+                <h2>
+                    Hola, {{ perfil.nombre }}.
+                    <br>
+                    ¿Por dónde empezamos?
+                </h2>
+                <p>
+                    El modo guiado responde con reglas y tus datos guardados. La IA generativa es opcional.
+                </p>
+            </div>
+            <div class="suggestions">
+                {% for question in ['¿Qué rutina tengo hoy?', '¿Cómo va mi progreso de peso?', '¿Cómo calculo las calorías?', '¿Dónde se guardan mis datos?'] %}
+                    <form action="{{ url_for('preguntar') }}" method="post">
+                        {{ csrf() }}
+                        <input type="hidden" name="pregunta" value="{{ question }}">
+                        <button type="submit">
+                            {{ question }} {{ icono('arrow') }}
+                        </button>
+                    </form>
+                {% endfor %}
+            </div>
+            <div class="chat-messages" aria-label="Historial de conversación">
+                {% for msg in data.Mensajes[-20:] %}
+                    <article class="message {{ msg.rol }}">
+                        <span>
+                            {{ 'Vos' if msg.rol == 'usuario' else 'Asistente' }} · {{ 'IA local' if msg.modo == 'ia' else 'Modo guiado' }}
+                        </span>
+                        <p>
+                            {{ msg.contenido }}
+                        </p>
+                    </article>
+                {% endfor %}
+                <span id="ultimo">
+                </span>
+            </div>
+            <form action="{{ url_for('preguntar') }}" method="post" class="chat-form">
+                {{ csrf() }}
+                <input type="hidden" name="volver" value="/asistente">
+                <label for="pregunta">
+                    Tu consulta
+                </label>
+                <textarea id="pregunta" name="pregunta" rows="2" required maxlength="1000" placeholder="Por ejemplo: ¿qué rutina tengo hoy?">
+                </textarea>
+                <div>
+                    <label class="chat-mode">
+                        Responder con
+                        <select name="modo">
+                            <option value="guiado">
+                                Asistente guiado
+                            </option>
+                            {% if modo_ia %}
+                                <option value="ia">
+                                    IA local (Ollama)
+                                </option>
+                            {% endif %}
+                        </select>
+                    </label>
+                    <button class="button primary">
+                        Enviar {{ icono('arrow') }}
+                    </button>
+                </div>
+            </form>
+        </section>
+        <aside>
+            <section class="card assistant-about">
+                <h2>
+                    Hecho para acompañar tu registro.
+                </h2>
+                <ul class="feature-checks">
+                    <li>
+                        {{ icono('check') }} Consulta tu rutina de hoy
+                    </li>
+                    <li>
+                        {{ icono('check') }} Resume el cambio de peso
+                    </li>
+                    <li>
+                        {{ icono('check') }} Explica el cálculo de calorías
+                    </li>
+                    <li>
+                        {{ icono('check') }} Ayuda a encontrar tus datos
+                    </li>
+                </ul>
+                <p class="field-help">
+                    No diagnostica lesiones ni indica tratamientos o dietas. Una consulta de salud necesita un profesional.
+                </p>
+                <a href="{{ url_for('ajustes') }}#ia" class="text-link">
+                    Conocer la IA opcional {{ icono('arrow') }}
+                </a>
+            </section>
+        </aside>
+    </div>
+{% endblock %}
